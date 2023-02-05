@@ -9,8 +9,8 @@ SETUPS_HOME=${SETUPS_HOME:-"$HOME/setups"}
 setups(){
   if [ -n "${DEBUG:-}" ]; then set -x; fi
 
-  source_dir "$SETUPS_HOME"/setups.d/preload.d
-  source_dir "$SETUPS_HOME"/setups.d/plugins.d
+  source_dir "$SETUPS_HOME"/preload.d
+  source_dir "$SETUPS_HOME"/plugins.d
   source_dir "$SETUPS_HOME"/setups.d
 
   for i in "${@}"; do
@@ -84,7 +84,7 @@ HEREDOC
 }
 
 setup_--version(){
-  printf "%s.%s.%s-%s\n" 1 0 0 dumbledore
+  printf "%s.%s.%s-%s\n" 1 1 0 dumbledore
   setup_--checksum
 }
 
