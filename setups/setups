@@ -155,4 +155,4 @@ setup_setups(){
   unset url tmp_src dst
 }
 
-[[ "$0" == "${BASH_SOURCE[0]}" ]] && setups "$@"
+if [ "$0" == "${BASH_SOURCE[0]}" ]; then setups "$@"; fi

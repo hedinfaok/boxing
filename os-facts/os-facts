@@ -65,4 +65,4 @@ setup_--os-facts(){
     os_facts
 }
 
-[[ "$0" == "${BASH_SOURCE[0]}" ]] && os_facts "$@"
+if [ "$0" == "${BASH_SOURCE[0]}" ]; then os_facts "$@"; fi
