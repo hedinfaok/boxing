@@ -8,9 +8,10 @@ SETUPS_HOME=${SETUPS_HOME:-"$HOME"}
 setups(){
   if [ -n "${DEBUG:-}" ]; then set -x; fi
 
+  source_dir "$SETUPS_HOME"/setups.d/preload.d
   source_dir "$SETUPS_HOME"/setups.d/plugins.d
   source_dir "$SETUPS_HOME"/setups.d
- 
+
   for i in "${@}"; do
     case "$i" in
       --*)
