@@ -188,4 +188,4 @@ function _provides_nix_bin(){ notyet; }
 # Set default package manager
 PACKAGE_MANAGER=${PACKAGE_MANAGER:-apt}
 
-if [[ "$0" == "${BASH_SOURCE[0]}" ]]; then provides "$@"; fi
+if [ "$0" == "${BASH_SOURCE[0]}" ]; then provides "$@"; fi
