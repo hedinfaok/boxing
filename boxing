@@ -6,11 +6,15 @@ BOXING_INSTALL_DIR="$(dirname "$(readlink -f "$0")")"
 
 help(){
 cat <<HEREDOC
-Usage: boxing [--help] [--list] <command>
+Usage: boxing [--help] [--list] [--version] <command>
 
-boxing --help, Display this message.
-boxing --list, List available boxing commands.
-boxing <command>, Run command from --list.
+boxing --help, Display this message and exit.
+boxing --list, List available boxing commands and exit.
+boxing --version, Display version and exit.
+boxing <command>, Run command and exit.
+
+Available commands:
+$(list)
 HEREDOC
 }
 
