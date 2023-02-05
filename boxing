@@ -2,6 +2,8 @@
 
 # Convenience dispatcher for all Boxing utilites
 
+BOXING_INSTALL_DIR="$(dirname "$(readlink -f "$0")")"
+
 help(){
 cat <<HEREDOC
 Usage: boxing [--help] [--list] <command>
@@ -13,10 +15,11 @@ HEREDOC
 }
 
 list(){
-    for i in *; do
+    for i in "$BOXING_INSTALL_DIR"/*; do
         if [ -d "$i" ]; then
-            if [ -x "$i"/"$i" ]; then
-                printf "%s\n" "$i"
+        local cmd="$(basename "$i")"
+        if [ -x "$i"/"$cmd" ]; then
+                printf "%s\n" "$cmd"
             fi
         fi
     done
@@ -27,10 +30,10 @@ version(){
 }
 
 _dispatch(){
-    if [ -x "$1"/"$1" ]; then
+    if [ -x "$BOXING_INSTALL_DIR"/"$1"/"$1" ]; then
         cmd="$1"
         shift
-        exec "$cmd"/"$cmd" "$@"
+        exec "$BOXING_INSTALL_DIR"/"$cmd"/"$cmd" "$@"
     else
         help
     fi
