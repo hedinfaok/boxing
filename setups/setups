@@ -1,0 +1,148 @@
+#!/bin/bash
+
+SETUPS_HOME=${SETUPS_HOME:-"$HOME"}
+
+# USAGE: setups [name] ... [name]
+setups(){
+  [ -n "$DEBUG" ] && set -x
+
+  source_dir "$SETUPS_HOME"/setups.d/plugins.d
+  source_dir "$SETUPS_HOME"/setups.d
+ 
+  for i in "${@}"; do
+    case "$i" in
+      --*)
+        "setup_$i" "$@"
+        ;;
+      *)
+        printf "Running setups for %s ...\n\n" "$i"
+        "setup_$i" "$@"
+        ;;
+    esac
+  done
+
+  [ -n "$DEBUG" ] && set +x
+}
+
+source_dir(){
+  dir="${1:-"$SETUPS_HOME"/setups.d}"
+  fnmatch="${2:-*.sh}"
+
+  if [ -d "$dir" ]; then
+    for i in $dir/$fnmatch; do
+      if [ -r "$i" ]; then
+        # shellcheck source=/dev/null
+        . "$i"
+      fi
+    done
+    unset i
+  else
+    mkdir -p "$dir" 2>/dev/null
+  fi
+  unset dir fnmatch
+}
+
+# Wrap sudo to allow running setups as root user when sudo is in the script
+sudo(){
+  if [ "$(id -u)" -ne 0 ]; then
+    /usr/bin/sudo "$@"
+  else
+    "$@"
+  fi
+}
+
+# Return true if file exists, false otherwise.
+creates(){
+  [ -f "$1" ]
+}
+
+# Run setup_* if command not found
+needs(){
+  for i in "$@"; do
+    command -v "$i" >/dev/null || setup_"$i"
+  done
+}
+
+#
+## Internal functions
+#
+
+setup_--help(){
+cat <<HEREDOC
+Usage: setups [--list] [--help] [--readme] [--version] [--checksum] name [name ...]
+
+Plugin options:
+$(setup__--flags | grep -vF -e '--list' -e '--help' -e '--readme' -e '--version' -e '--checksum')
+HEREDOC
+}
+
+setup_--version(){
+  printf "%s.%s.%s-%s\n" 1 0 0 dumbledore
+  setup_--checksum
+}
+
+setup_--checksum(){
+  printf "checksum (SHA256): %s\n" "$(sha256sum "$BASH_SOURCE" | cut -d' ' -f1)"
+}
+
+# List sourced functions that start with "setup_--"
+setup__--flags(){
+  declare -F \
+    | grep '^declare -f setup_--' \
+    | cut -d' ' -f3 \
+    | cut -d_ -f2-
+}
+
+# List sourced functions that start with "setup_"
+setup_--list(){
+  declare -F \
+    | grep '^declare -f setup_' \
+    | grep -v -e '^declare -f setup_--' -e '^declare -f setup__--' \
+    | cut -d' ' -f3 \
+    | cut -d_ -f2-
+}
+
+setup_--readme(){
+cat <<HEREDOC
+Setups is a simple bash utility that sources files matching ~/setups.d/*.sh
+and runs shell functions that match setup_<name>.
+
+Getting started is easy. Define the following shell functions in
+~/setups.d/hello-world.sh:
+
+function setup_hello() { printf "Hello"; }
+function setup_world() { printf "World"; }
+
+Then in your terminal, run the following command:
+
+$ setups hello world
+
+Setups will run setup_hello and setup_world. Yay!
+
+Setups provides a convention for installing software that may not come from
+the system package manager, so you can create repeatable experiences in your
+shell.
+
+Here is a more realistic function to setup Homebrew:
+
+function setup_brew(){
+  NONINTERACTIVE=1 /bin/bash -c "\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+}
+
+Now you can run the following to install homebrew:
+
+$ setups brew
+
+Additionally, you can list all defined setups by running setups --list
+
+Setups made my work easier, but don't take my word for it. Try it out today!
+HEREDOC
+}
+
+setup_setups(){
+  curl --fail -svo /tmp/setups "https://raw.githubusercontent.com/hedinfaok/boxing/main/setups/setups"
+  chmod a+x /tmp/setups
+  mv /tmp/setups $SETUPS_HOME/setups.d/
+}
+
+[[ "$0" == "${BASH_SOURCE[0]}" ]] && setups "$@"

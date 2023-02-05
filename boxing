@@ -1,0 +1,55 @@
+#!/bin/sh
+
+# Convenience dispatcher for all Boxing utilites
+
+help(){
+cat <<HEREDOC
+Usage: boxing [--help] [--list] <command>
+
+boxing --help, Display this message.
+boxing --list, List available boxing commands.
+boxing <command>, Run command from --list.
+HEREDOC
+}
+
+list(){
+    for i in *; do
+        if [ -d "$i" ]; then
+            if [ -x "$i"/"$i" ]; then
+                printf "%s\n" "$i"
+            fi
+        fi
+    done
+}
+
+version(){
+    printf "%s.%s.%s-%s\n" 0 1 0 fry
+}
+
+_dispatch(){
+    if [ -x "$1"/"$1" ]; then
+        cmd="$1"
+        shift
+        exec "$cmd"/"$cmd" "$@"
+    else
+        help
+    fi
+}
+
+boxing(){
+    if [ $# -gt 0 ]; then
+        case "$1" in
+            --help|-h|help)
+                help ;;
+            --list|-l|list)
+                list ;;
+            --version|-v|version)
+                version ;;
+            *) _dispatch "$@" ;;
+        esac
+    else
+        help
+    fi
+}
+
+boxing "$@"

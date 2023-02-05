@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+
+setup_distro(){
+  needs python3 pip3
+  pip3 install --user distro
+}
+
+setup_virt-what(){
+  sudo apt-get install virt-what
+}
+
+os_facts_virt_facts(){
+  # See /usr/bin/systemd-detect-virt --list
+  # See https://github.com/systemd/systemd/blob/dd003f1621967f114a6a808bb1f729386dc3a154/src/basic/virt.c#L647
+  sudo /usr/sbin/virt-what
+}
+
+os_facts_release(){
+    local id
+    cat /etc/*release
+}
+
+os_facts_release_id(){
+    local id
+
+    id="$(grep -i -e '^ID=' /etc/*release 2>/dev/null | cut -d= -f2)"
+    printf "%s" "$id"
+}
+
+os_facts_kernel_id(){
+  local id
+
+  case "$(cat /proc/version)" in
+    *chromeos*) id=chromeos ;;
+    *ubuntu*) id=ubuntu ;;
+    *debian*) id=debian ;;
+    *redhat*) id=redhat ;;
+    *) id=unknown ;;
+  esac
+
+  printf "%s" "$id"
+}
+
+os_facts(){
+  needs distro virt-what >/dev/null 2>&1
+  cat <<HEREDOC
+== Virtualization facts ==
+$(os_facts_virt_facts)
+
+== Kerknel ID fact ==
+$(os_facts_kernel_id)
+
+== System Information (uname) ==
+$(uname -a)
+
+== OS Release facts ==
+$(os_facts_release)
+
+== Distro (distro.py) facts
+$(distro)
+HEREDOC
+}
+
+setup_--os-facts(){
+    os_facts
+}
+
+[[ "$0" == "${BASH_SOURCE[0]}" ]] && os_facts "$@"

@@ -1,0 +1,191 @@
+#!/usr/bin/env bash
+
+##
+# provides [--help|--version] [--apt|--yum] [command|filepath]
+# Determine the package that provides the given command or filepath.
+##
+function provides(){
+  for i in "${@}"; do
+    case "$i" in
+      --help ) provides_--help; exit ;;
+      --version ) provides_--version; exit ;;
+      --checksum ) provides_--checksum; exit ;;
+      --* ) provides_"$1"; shift ;;
+      /* ) _provides_"$PACKAGE_MANAGER"_filepath "$i" ;;
+      *  ) _provides_"$PACKAGE_MANAGER"_bin "$i" ;;
+    esac
+  done
+
+  exit "$?"
+}
+
+provides_--version(){
+  printf "%s.%s.%s-%s\n" 1 0 0 redwing
+  provides_--checksum
+}
+
+provides_--checksum(){
+  printf "checksum (SHA256): %s\n" "$(sha256sum "$BASH_SOURCE" | cut -d' ' -f1)"
+}
+
+function provides_--help(){
+cat << HEREDOC
+provides [--help|--version] [--PACKAGE_MANGER] [command|filepath]
+
+Determine the package that provides the given command or filepath.
+
+PACKAGE_MANAGER can be one of the following values:
+setups
+apt
+apk
+brew (fallback to \`brew search\`)
+guix (fallback to \`guix search\`)
+pacman (pending)
+yum (pending)
+dnf (pending)
+pkg (termux)  (pending)
+nix (pending)
+
+PACKAGE_MANAGER can also be declared as an environment variable.
+
+Example: provides --apt python3 /etc/os-release nc
+HEREDOC
+}
+
+##
+# Apt
+##
+function  provides_--apt() { PACKAGE_MANAGER=apt; }
+function _provides_apt-file(){
+  command -v apt-file >/dev/null \
+  || ( sudo apt-get install -y apt-file && sudo apt-file update )
+}
+
+# Search for filepath
+function _provides_apt_filepath(){
+  _provides_apt-file
+  sudo apt-file search -x ^"$1"$ | head -n1 | cut -d':' -f1
+}
+
+# Search for bin in /bin,/sbin,/usr/bin/,/usr/sbin
+function _provides_apt_bin(){
+  local bin
+  _provides_apt-file
+  bin=$(_provides_apt_alternatives_query "$1")
+  sudo apt-file search -x ^/\(usr/\)?s?bin/"$bin"$ | head -n1 | cut -d':' -f1  
+}
+
+# Search apt alternatives for bin path
+function _provides_apt_alternatives_query(){
+  local bin="$1"
+  local alt
+  alt=$(update-alternatives --query "$bin" 2>/dev/null | grep ^Best: | cut -d'/' -f3)
+  if [[ -n "$alt" ]]; then
+    bin=$alt
+  fi
+  printf "%s" "$bin"
+}
+
+function notyet(){
+  echo "Not yet implemented" 2>&1 /dev/null
+  false
+}
+
+function not_supported(){
+  printf "Searching by %s (%s) is not possible with %s.\n" "$@" 2>&1
+}
+
+##
+# Setups
+##
+function  provides_--setups() { PACKAGE_MANAGER=setups; }
+function _provides_setups_filepath(){
+  not_supported "filepath" "$1" $PACKAGE_MANAGER
+  return 1
+}
+
+function _provides_setups_bin(){
+  declare -F setup_"$i" >/dev/null && echo "$i"
+}
+
+##
+# pacman
+# see https://archlinux.org/pacman/pacman.8.html#FO
+##
+function  provides_--pacman() { PACKAGE_MANAGER=pacman; }
+function _provides_pacman_filepath(){ notyet; }
+function _provides_pacman_bin(){ notyet; }
+
+##
+# yum
+##
+function  provides_--yum() { PACKAGE_MANAGER=yum; }
+function _provides_yum_filepath(){ notyet; }
+function _provides_yum_bin(){ notyet; }
+
+##
+# dnf
+##
+function  provides_--dnf() { PACKAGE_MANAGER=dnf; }
+function _provides_dnf_filepath(){ notyet; }
+function _provides_dnf_bin(){ notyet; }
+
+##
+# brew
+##
+function  provides_--brew() { PACKAGE_MANAGER=brew; }
+function _provides_brew_filepath(){
+  not_supported "filepath" "$1" $PACKAGE_MANAGER
+  return 1
+}
+function _provides_brew_bin(){
+  not_supported "command" "$1" $PACKAGE_MANAGER  
+  echo Using \`brew search "$1"\`
+  brew search "$1"
+}
+
+##
+# pkg (termux)
+##
+function  provides_--pkg() { PACKAGE_MANAGER=pkg; }
+function _provides_pkg_filepath(){ notyet; }
+function _provides_pkg_bin(){ notyet; }
+
+##
+# apk
+##
+function  provides_--apk() { PACKAGE_MANAGER=apk; }
+function _provides_apk_filepath(){
+  command -v apk-file || apk add apk-file
+  apk-file "$1"
+}
+function _provides_apk_bin(){
+  apk update
+  apk search -xqo "cmd:$1"
+}
+
+##
+# guix
+##
+function  provides_--guix() { PACKAGE_MANAGER=guix; }
+function _provides_guix_filepath(){
+  not_supported "filepath" "$1" $PACKAGE_MANAGER
+  return 1
+}
+function _provides_guix_bin(){
+  not_supported "command" "$1" $PACKAGE_MANAGER
+  echo Using \`guix search "^$1"\`
+  PAGER=cat guix search "^$1"
+ }
+
+##
+# nix
+##
+function  provides_--nix() { PACKAGE_MANAGER=nix; }
+function _provides_nix_filepath(){ notyet; }
+function _provides_nix_bin(){ notyet; }
+
+# Set default package manager
+PACKAGE_MANAGER=${PACKAGE_MANAGER:-apt}
+
+[[ "$0" == "${BASH_SOURCE[0]}" ]] && provides "$@"
