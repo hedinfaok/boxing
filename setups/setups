@@ -1,10 +1,12 @@
 #!/bin/bash
 
+set -euo pipefail
+
 SETUPS_HOME=${SETUPS_HOME:-"$HOME"}
 
 # USAGE: setups [name] ... [name]
 setups(){
-  [ -n "$DEBUG" ] && set -x
+  if [ -n "${DEBUG:-}" ]; then set -x; fi
 
   source_dir "$SETUPS_HOME"/setups.d/plugins.d
   source_dir "$SETUPS_HOME"/setups.d
@@ -21,7 +23,7 @@ setups(){
     esac
   done
 
-  [ -n "$DEBUG" ] && set +x
+  if [ -n "${DEBUG:-}" ];then set +x; fi
 }
 
 source_dir(){
@@ -140,9 +142,17 @@ HEREDOC
 }
 
 setup_setups(){
-  curl --fail -svo /tmp/setups "https://raw.githubusercontent.com/hedinfaok/boxing/main/setups/setups"
-  chmod a+x /tmp/setups
-  mv /tmp/setups $SETUPS_HOME/setups.d/
+  url=https://raw.githubusercontent.com/hedinfaok/boxing/main/setups/setups
+  tmp_src="${TMPDIR:-/tmp}/setups"
+  dst="$SETUPS_HOME/setups.d/setups"
+
+  printf "Downloading %s from %s\n" setups "$url"
+  curl --fail --progress-bar -o "$tmp_src" "$url"
+  chmod a+x "$tmp_src"
+  printf "Moving from %s to %s\n" "$tmp_src" "$dst"
+  mv -f "$tmp_src" "$dst"
+
+  unset url tmp_src dst
 }
 
 [[ "$0" == "${BASH_SOURCE[0]}" ]] && setups "$@"
