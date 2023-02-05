@@ -1,8 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -euo pipefail
 
-SETUPS_HOME=${SETUPS_HOME:-"$HOME"}
+SETUPS_SOURCE="$(readlink -f "$0")"
+SETUPS_HOME=${SETUPS_HOME:-"$HOME/setups"}
 
 # USAGE: setups [name] ... [name]
 setups(){
@@ -75,7 +76,10 @@ cat <<HEREDOC
 Usage: setups [--list] [--help] [--readme] [--version] [--checksum] name [name ...]
 
 Plugin options:
-$(setup__--flags | grep -vF -e '--list' -e '--help' -e '--readme' -e '--version' -e '--checksum')
+$(setup__--flags | grep -vF -e '--list' -e '--help' -e '--readme' -e '--version' -e '--checksum' | grep . || printf "no plugins\n")
+
+Environment: SETUPS_HOME=$SETUPS_HOME
+Source: $SETUPS_SOURCE
 HEREDOC
 }
 
@@ -145,7 +149,7 @@ HEREDOC
 setup_setups(){
   url=https://raw.githubusercontent.com/hedinfaok/boxing/main/setups/setups
   tmp_src="${TMPDIR:-/tmp}/setups"
-  dst="$SETUPS_HOME/setups.d/setups"
+  dst="$SETUPS_HOME/setups"
 
   printf "Downloading %s from %s\n" setups "$url"
   curl --fail --progress-bar -o "$tmp_src" "$url"
