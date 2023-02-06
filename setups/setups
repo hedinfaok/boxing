@@ -5,13 +5,16 @@ set -euo pipefail
 SETUPS_SOURCE="$(readlink -f "$0")"
 SETUPS_HOME=${SETUPS_HOME:-"$HOME/setups"}
 
-# USAGE: setups [name] ... [name]
-setups(){
-  if [ -n "${DEBUG:-}" ]; then set -x; fi
-
+setups_prepare(){
   source_dir "$SETUPS_HOME"/preload.d
   source_dir "$SETUPS_HOME"/plugins.d
   source_dir "$SETUPS_HOME"/setups.d
+  setups "$@"
+}
+
+# USAGE: setups [name] ... [name]
+setups(){
+  if [ -n "${DEBUG:-}" ]; then set -x; fi
 
   for i in "${@}"; do
     case "$i" in
@@ -109,6 +112,20 @@ setup_--list(){
     | cut -d_ -f2-
 }
 
+# Load additional sources for setups
+setup_--source(){
+  shift; source "$1"; shift
+  setups "$@"
+  exit $?
+}
+
+# Load additional sources for setups from a directory
+setup_--source-dir(){
+  shift; source_dir "$1"; shift
+  setups "$@"
+  exit $?
+}
+
 setup_--readme(){
 cat <<HEREDOC
 Setups is a simple bash utility that sources files matching ~/setups.d/*.sh
@@ -160,4 +177,4 @@ setup_setups(){
   unset url tmp_src dst
 }
 
-if [ "$0" == "${BASH_SOURCE[0]}" ]; then setups "$@"; fi
+if [ "$0" == "${BASH_SOURCE[0]}" ]; then setups_prepare "$@"; fi
