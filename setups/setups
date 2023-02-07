@@ -20,10 +20,14 @@ SETUPS_FORCE=""
 setups(){
   if [ -n "${DEBUG:-}" ]; then set -x; fi
 
+  local skip_options=""
   for i in "${@}"; do
     case "$i" in
+      --)
+        skip_options="true"
+        ;;
       --*)
-        "setup_$i" "$@"
+        [ -z "$skip_options" ] && "setup_$i" "$@"
         ;;
       *)
         printf "Running setups for %s ...\n\n" "$i"
