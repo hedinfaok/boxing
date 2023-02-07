@@ -12,6 +12,9 @@ setups_prepare(){
   setups "$@"
 }
 
+# Flags
+SETUPS_FORCE=""
+
 # USAGE: setups [name] ... [name]
 setups(){
   if [ -n "${DEBUG:-}" ]; then set -x; fi
@@ -59,8 +62,9 @@ sudo(){
 }
 
 # Return true if file exists, false otherwise.
+# Skips check and returns false if setups --force flag is set.
 creates(){
-  [ -f "$1" ]
+  [ -z "$SETUPS_FORCE" ] && [ -f "$1" ]
 }
 
 # Run setup_* if command not found
@@ -124,6 +128,10 @@ setup_--source-dir(){
   shift; source_dir "$1"; shift
   setups "$@"
   exit $?
+}
+
+setup_--force(){
+  SETUPS_FORCE="--force"
 }
 
 setup_--readme(){
