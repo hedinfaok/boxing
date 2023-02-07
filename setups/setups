@@ -6,6 +6,7 @@ SETUPS_SOURCE="$(readlink -f "$0")"
 SETUPS_HOME=${SETUPS_HOME:-"$HOME/setups"}
 
 setups_prepare(){
+  SETUPS_BUILTINS=$(_setup_flags)
   source_dir "$SETUPS_HOME"/preload.d
   source_dir "$SETUPS_HOME"/plugins.d
   source_dir "$SETUPS_HOME"/setups.d
@@ -77,17 +78,29 @@ needs(){
 #
 ## Internal functions
 #
-
 setup_--help(){
 cat <<HEREDOC
-Usage: setups [--list] [--help] [--readme] [--version] [--checksum] name [name ...]
+Usage: setups [options] name [name ...]
+
+Built-in options:
+$SETUPS_BUILTINS
 
 Plugin options:
-$(setup__--flags | grep -vF -e '--list' -e '--help' -e '--readme' -e '--version' -e '--checksum' | grep . || printf "no plugins\n")
+$( _setup_list_plugins | grep . || printf "no plugins\n")
 
 Environment: SETUPS_HOME=$SETUPS_HOME
 Source: $SETUPS_SOURCE
 HEREDOC
+}
+
+# Print plugin options, one per line
+_setup_list_plugins(){
+  local grep_opts
+
+  for ignore in $SETUPS_BUILTINS; do
+    grep_opts+=(-e); grep_opts+=($ignore)
+  done
+  _setup_flags | grep -vF "${grep_opts[@]}"
 }
 
 setup_--version(){
@@ -100,7 +113,7 @@ setup_--checksum(){
 }
 
 # List sourced functions that start with "setup_--"
-setup__--flags(){
+_setup_flags(){
   declare -F \
     | grep '^declare -f setup_--' \
     | cut -d' ' -f3 \
