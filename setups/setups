@@ -7,6 +7,7 @@ SETUPS_HOME=${SETUPS_HOME:-"$HOME/setups"}
 
 setups_prepare(){
   SETUPS_BUILTINS=$(_setup_flags)
+  [ -d "$SETUPS_HOME"/bin ] || mkdir -p "$SETUPS_HOME"/bin
   source_dir "$SETUPS_HOME"/preload.d
   source_dir "$SETUPS_HOME"/plugins.d
   source_dir "$SETUPS_HOME"/setups.d
@@ -233,7 +234,7 @@ HEREDOC
 setup_setups(){
   download https://raw.githubusercontent.com/hedinfaok/boxing/main/setups/setups
   chmod a+x "$SETUPS_CTX_DOWNLOAD_PATH"
-  mv -f "$SETUPS_CTX_DOWNLOAD_PATH" "$SETUPS_SOURCE"
+  mv -f "$SETUPS_CTX_DOWNLOAD_PATH" "$SETUPS_HOME/bin/setups"
 }
 
 if [ "$0" == "${BASH_SOURCE[0]}" ]; then setups_prepare "$@"; fi
