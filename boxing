@@ -2,7 +2,7 @@
 
 # Convenience dispatcher for all Boxing utilites
 
-BOXING_INSTALL_DIR="$(dirname "$(readlink -f "$0")")"
+export BOXING_INSTALL_DIR="$(dirname "$(readlink -f "$0")")"
 
 help(){
 cat <<HEREDOC
