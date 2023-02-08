@@ -57,6 +57,23 @@ source_dir(){
   unset dir fnmatch
 }
 
+# hedinfaok/chromeos-dotfiles/HEAD/setups/setups.d/base.sh
+source_github(){
+  local GITHUB_TOKEN=${GITHUB_TOKEN:-$(gh auth token)}
+  local curl_opts
+  for i in "$@"; do
+    local url=https://raw.githubusercontent.com/"$i"
+    if [ -n "$GITHUB_TOKEN" ]; then
+      curl_opts+=(
+        -H
+        "Authorization: token $GITHUB_TOKEN"
+      )
+    fi
+    download "$url" "${curl_opts[@]}"
+    source "$SETUPS_CTX_DOWNLOAD_PATH"
+  done
+}
+
 # Wrap sudo to allow running setups as root user when sudo is in the script
 sudo(){
   if [ "$(id -u)" -ne 0 ]; then
@@ -79,7 +96,7 @@ needs(){
   done
 }
 
-# url_path <url>, returns path part or URL
+# url_path <url>, returns path part of URL
 url_path(){
   local url="$(printf "%s" "$1" | cut -d\? -f1)"
   printf "\/%s" "$url" | cut -d/ -f4-
@@ -161,6 +178,13 @@ setup_--source(){
 # Load additional sources for setups from a directory
 setup_--source-dir(){
   shift; source_dir "$1"; shift
+  setups "$@"
+  exit $?
+}
+
+# Load additional sources for setups from github
+setup_--source-github(){
+  shift; source_github "$1"; shift
   setups "$@"
   exit $?
 }
