@@ -79,6 +79,24 @@ needs(){
   done
 }
 
+# url_path <url>, returns path part or URL
+url_path(){
+  local url="$(printf "%s" "$1" | cut -d\? -f1)"
+  printf "\/%s" "$url" | cut -d/ -f4-
+}
+
+# Usage: download <url> [curl_opt]...[curl_opt], SETUPS_CTX_DOWNLOAD_PATH stores download path
+download(){
+  local url="$1"; shift;
+  local tmp_path="$(mktemp -d -t setups-download-XXXXXXXXXXXX)"/"$(url_path "$url")"
+  local curl_opts=(--fail --progress-bar --create-dir -o "$tmp_path" --location -X GET "$@")
+
+  printf "Download source: %s\nDownload destination: %s\n" "$url" "$tmp_path"
+  SETUPS_CTX_DOWNLOAD_PATH=""
+  curl "${curl_opts[@]}" "$url"
+  export SETUPS_CTX_DOWNLOAD_PATH="$tmp_path"
+}
+
 #
 ## Internal functions
 #
@@ -189,17 +207,9 @@ HEREDOC
 }
 
 setup_setups(){
-  url=https://raw.githubusercontent.com/hedinfaok/boxing/main/setups/setups
-  tmp_src="${TMPDIR:-/tmp}/setups"
-  dst="$SETUPS_HOME/setups"
-
-  printf "Downloading %s from %s\n" setups "$url"
-  curl --fail --progress-bar -o "$tmp_src" "$url"
-  chmod a+x "$tmp_src"
-  printf "Moving from %s to %s\n" "$tmp_src" "$dst"
-  mv -f "$tmp_src" "$dst"
-
-  unset url tmp_src dst
+  download https://raw.githubusercontent.com/hedinfaok/boxing/main/setups/setups
+  chmod a+x "$SETUPS_CTX_DOWNLOAD_PATH"
+  mv -f "$SETUPS_CTX_DOWNLOAD_PATH" "$SETUPS_SOURCE"
 }
 
 if [ "$0" == "${BASH_SOURCE[0]}" ]; then setups_prepare "$@"; fi
