@@ -19,7 +19,23 @@ For Termux or my personal computer, I use Boxing in my dotfiles.
 
 ## Installation
 
-TBD
+```
+bash <(curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/HEAD/boxing.setups.sh")
+```
+Make sure `~/.local/bin` is in your PATH.
+
+### Alternative Installtion
+
+Alternatively, just clone the directory and add the directory to your PATH.
+
+## Using as a provisioner
+
+Be sure to copy the `boxing` directory as part of the provisioning process.
+
+* Docker: Use the COPY command in your Dockerfile.
+* Packer: Use file provisioner to copy the directory into the target.
+* Dotfiles: Copy the `boxing` directory and commit to your git repo.
+* Others: Yep, just copy the directory over.
 
 ## Utilities
 
