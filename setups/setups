@@ -86,9 +86,12 @@ sudo(){
 
 # Return true if file exists, false otherwise.
 # Skips check and returns false if setups --force flag is set.
-creates(){
-  [ -z "$SETUPS_FORCE" ] && [ -f "$1" ]
+created(){
+  local flag="-f"
+  if [[ "$1" = -* ]]; then flag="$1"; shift; fi
+  [ -z "$SETUPS_FORCE" ] && [ $flag "$1" ]
 }
+creates(){ created "$@"; }
 
 # Run setup_* if command not found
 needs(){
