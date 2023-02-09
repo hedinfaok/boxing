@@ -1,0 +1,65 @@
+#!/bin/bash
+
+set -eo pipefail
+
+VERSION=0.1
+
+version() {
+  echo "$0 v${VERSION}"
+}
+
+usage() {
+  cat <<HEREDOC
+Usage: switch [--help] [--version] [environment]
+
+Stores the name of the intended context in a file (.switch). The file can be
+sourced to set the SWITCH_ENV environment variable.
+
+The .switch file is an interface for applications to become aware of the shared
+contextual environment. It is shell, dotenv compatible, and direnv compatible.
+
+Running switch without an argument will default to the local context.
+
+Example: Usage with direnv
+  Setup direnv to watch the .switch and a contextual environment file on disk.
+  When either is changed, direnv reloads.
+
+  # .envrc file:
+  #
+  # dotenv .switch
+  # dotenv .env-\$SWITCH_ENV
+
+  switch ci
+
+Example: Usage in bash
+  Switch to the ci context and load ci environment variables stored on disk.
+
+  switch ci; source .switch; source .env-\$SWITCH_ENV
+
+HEREDOC
+}
+
+# Create the .switch file
+switch_file() {
+  cat << HEREDOC > .switch
+# Modified $(date)
+export SWITCH_ENV=$1
+HEREDOC
+}
+
+switch() {
+  case "$1" in
+    --help|-h)
+      help
+      ;;
+    --version|-v)
+      version
+      ;;
+    *)
+      # Save string into .switch file
+      switch_file "${1:-local}"
+      ;;
+  esac
+}
+
+switch "$@"
