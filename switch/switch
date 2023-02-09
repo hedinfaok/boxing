@@ -8,7 +8,7 @@ version() {
   echo "$0 v${VERSION}"
 }
 
-usage() {
+help() {
   cat <<HEREDOC
 Usage: switch [--help] [--version] [environment]
 
