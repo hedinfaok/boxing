@@ -21,6 +21,4 @@ setup_boxing(){
 }
 
 source <(curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/HEAD/setups/setups")
-
-if [ $# -gt 0 ]; then flag="--force"; fi
-setups "$flag" boxing
+setups --force boxing
