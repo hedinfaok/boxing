@@ -1,0 +1,73 @@
+#!/bin/bash
+
+set -euo pipefail
+
+VERSION=0.1.1
+CONFIG=${CONFIG:-config.ini}
+
+version() {
+  echo v"$VERSION"
+}
+
+usage() {
+  cat <<HEREDOC
+  config [--help|--version] <command>
+
+  Simple wrapper around git-config for adding key values and retrieving them. Uses
+  config.ini by default. Define the config file with the CONFIG environment
+  variable.
+
+  Commands:
+  list                 default command. Lists all keys in ${CONFIG}
+  add <key> <value>    adds a key,value to a git-config compatible ini file
+  get <key>            gets all values for a key from a git-config compatible ini file
+
+  Environment variables:
+  CONFIG=${CONFIG}
+
+HEREDOC
+}
+
+config_list() {
+  git config -f "${CONFIG}" --list
+}
+
+config_add() {
+  git config -f "${CONFIG}" --add "$1" "$2"
+}
+
+config_get() {
+  git config -f "${CONFIG}" --get-all "$1" | sort | uniq
+}
+
+config_err() {
+  echo "Something went wrong trying to get the configuration. Is ${CONFIG} missing?" >&2
+  return 1
+}
+
+config() {
+  case "${1:-usage}" in
+    --help|-help|-h)
+      usage
+      ;;
+    --version|-version|-v)
+      version
+      ;;
+    list)
+      config_list
+      ;;
+    add|set)
+      shift
+      config_add "$@"
+      ;;
+    get)
+      shift
+      config_get "$@"
+      ;;
+    *)
+      usage
+      return 1
+  esac
+}
+
+config "$@"
