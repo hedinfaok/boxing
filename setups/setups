@@ -172,6 +172,15 @@ setup_--list(){
     | cut -d_ -f2-
 }
 
+# Print the source function that matches setup_$1
+setup_--print(){
+  shift;
+  for s in ${@}; do
+    declare -f setup_"$s"
+  done
+  exit $?
+}
+
 # Load additional sources for setups
 setup_--source(){
   shift; source "$1"; shift
