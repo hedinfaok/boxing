@@ -5,6 +5,7 @@
 # Determine the package that provides the given command or filepath.
 ##
 function provides(){
+  if [ -n "$DEBUG" ]; then set -x; fi
   for i in "${@}"; do
     case "$i" in
       --help ) provides_--help; exit ;;
@@ -15,6 +16,7 @@ function provides(){
       *  ) _provides_"$PACKAGE_MANAGER"_bin "$i" ;;
     esac
   done
+  if [ -n "$DEBUG" ]; then set +x; fi
 
   exit "$?"
 }
@@ -72,16 +74,16 @@ function _provides_apt_bin(){
   local bin
   _provides_apt-file
   bin=$(_provides_apt_alternatives_query "$1")
-  sudo apt-file search -x ^/\(usr/\)?s?bin/"$bin"$ | head -n1 | cut -d':' -f1  
+  sudo apt-file search -x ^/\(usr/\)?s?bin/"$bin"\(.default\)\?$ | cut -d':' -f1
 }
 
 # Search apt alternatives for bin path
 function _provides_apt_alternatives_query(){
   local bin="$1"
   local alt
-  alt=$(update-alternatives --query "$bin" 2>/dev/null | grep ^Best: | cut -d'/' -f3)
+  alt=$(update-alternatives --list "$bin" 2>/dev/null)
   if [[ -n "$alt" ]]; then
-    bin=$alt
+    bin=$(basename $alt)
   fi
   printf "%s" "$bin"
 }
