@@ -10,6 +10,7 @@ Usage: boxing [--help] [--list] [--version] <command>
 
 boxing --help, Display this message and exit.
 boxing --list, List available boxing commands and exit.
+boxing --update, Update boxing tools and exit.
 boxing --version, Display version and exit.
 boxing <command>, Run command and exit.
 
@@ -34,7 +35,7 @@ update(){
 }
 
 version(){
-    printf "%s.%s.%s-%s\n" 0 2 0 fry
+    printf "%s.%s.%s-%s\n" 0 2 1 fry
 }
 
 _dispatch(){
