@@ -118,6 +118,20 @@ download(){
   export SETUPS_CTX_DOWNLOAD_PATH="$tmp_path"
 }
 
+# Usage: prompt_for_command <command> [args]...[args]
+prompt_for_command(){
+  local message="Do you want to $@"
+  local command="$@"
+  while true; do
+    read -p "$message [Y/n] " yn
+    case $yn in
+      [Yy]* ) $command; break;;
+      [Nn]* ) exit;;
+      * ) echo "Please answer yes or no.";;
+    esac
+  done
+}
+
 #
 ## Internal functions
 #
