@@ -225,23 +225,11 @@ cat <<HEREDOC
 Setups is a simple bash utility that sources files matching ~/setups.d/*.sh
 and runs shell functions that match setup_<name>.
 
-Getting started is easy. Define the following shell functions in
-~/setups.d/hello-world.sh:
-
-function setup_hello() { printf "Hello"; }
-function setup_world() { printf "World"; }
-
-Then in your terminal, run the following command:
-
-$ setups hello world
-
-Setups will run setup_hello and setup_world. Yay!
-
 Setups provides a convention for installing software that may not come from
 the system package manager, so you can create repeatable experiences in your
 shell.
 
-Here is a more realistic function to setup Homebrew:
+Here is a realistic function to setup Homebrew (save in ~/setups.d/homebrew.sh):
 
 function setup_brew(){
   NONINTERACTIVE=1 /bin/bash -c "\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -251,7 +239,7 @@ Now you can run the following to install homebrew:
 
 $ setups brew
 
-Additionally, you can list all defined setups by running setups --list
+You can list all defined setups by running setups --list
 
 Setups made my work easier, but don't take my word for it. Try it out today!
 HEREDOC
