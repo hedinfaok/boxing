@@ -222,14 +222,14 @@ setup_--force(){
 
 setup_--readme(){
 cat <<HEREDOC
-Setups is a simple bash utility that sources files matching ~/setups.d/*.sh
+Setups is a simple bash utility that sources files matching ~/setups/setups.d/*.sh
 and runs shell functions that match setup_<name>.
 
 Setups provides a convention for installing software that may not come from
 the system package manager, so you can create repeatable experiences in your
 shell.
 
-Here is a realistic function to setup Homebrew (save in ~/setups.d/homebrew.sh):
+Here is a realistic function to setup Homebrew (save in ~/setups/setups.d/homebrew.sh):
 
 function setup_brew(){
   NONINTERACTIVE=1 /bin/bash -c "\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
