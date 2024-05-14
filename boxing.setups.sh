@@ -2,6 +2,7 @@
 
 setup_boxing(){
     local install_dir="$HOME"/.local/lib/setups/repos
+    local bin_dir="$HOME"/.local/bin
 
     if ! created -d "$install_dir"; then
         mkdir -p "$install_dir"
@@ -12,6 +13,10 @@ setup_boxing(){
         git -C "$install_dir" clone https://github.com/hedinfaok/boxing.git
     else
         git -C "$install_dir/boxing" pull
+    fi
+
+    if ! created -d "$bin_dir"; then
+        mkdir -p "$bin_dir"
     fi
 
     if ! created -L "$HOME"/.local/bin/boxing; then
