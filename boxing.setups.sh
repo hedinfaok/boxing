@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 setup_boxing(){
-    local install_dir="$HOME"/.local/lib/setups/repos
+    local install_dir="$HOME"/.local/share/setups/repos
     local bin_dir="$HOME"/.local/bin
 
     if ! created -d "$install_dir"; then
