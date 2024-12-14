@@ -29,15 +29,14 @@ os_facts_release_id(){
 
 os_facts_kernel_id(){
   local id
-
   case "$(cat /proc/version)" in
     *chromeos*) id=chromeos ;;
     *ubuntu*) id=ubuntu ;;
     *debian*) id=debian ;;
     *redhat*) id=redhat ;;
+    *microsoft*) id=microsoft ;;
     *) id=unknown ;;
   esac
-
   printf "%s" "$id"
 }
 
