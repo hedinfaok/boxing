@@ -1,0 +1,31 @@
+name: CI
+on:
+  push:
+    branches:
+      - prototype
+
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        DOCKER_IMAGE: ["bash:3.2", "bash:4", "bash:5"]
+
+    container:
+      image: ${{ matrix.DOCKER_IMAGE }}
+      options: --cpus 1
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - run: apk add --update-cache shellcheck bats
+      - run: bash <(curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/HEAD/boxing.setups.sh")
+      - run: $HOME/.local/bin/boxing --version
+      - run: $HOME/.local/bin/boxing --list
+      - run: $HOME/.local/bin/setups --version
