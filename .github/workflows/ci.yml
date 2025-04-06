@@ -26,7 +26,7 @@ jobs:
         uses: actions/checkout@v3
       - run: apk add --update-cache curl shellcheck bats
       - run: bash --version
-      - run: curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/HEAD/boxing.setups.sh" | bash -x
+      - run: curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}/boxing.setups.sh" | bash -x
       - run: $HOME/.local/bin/boxing --version
       - run: $HOME/.local/bin/boxing --list
       - run: $HOME/.local/bin/setups --version
