@@ -2,6 +2,7 @@
 
 set -euo pipefail
 
+SETUPS_SOURCE=
 SETUPS_SOURCE="$(readlink -f "$0")"
 SETUPS_HOME=${SETUPS_HOME:-"$HOME/setups"}
 
