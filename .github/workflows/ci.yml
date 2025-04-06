@@ -38,7 +38,7 @@ jobs:
       - run: echo curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/${{ steps.get-branch-name.outputs.BRANCH_NAME }}/boxing.setups.sh"
       - run: curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/${{ steps.get-branch-name.outputs.BRANCH_NAME }}/boxing.setups.sh" | bash -x
         env:
-          BRANCH_NAME=${{ steps.get-branch-name.outputs.BRANCH_NAME }}
+          BRANCH_NAME: ${{ steps.get-branch-name.outputs.BRANCH_NAME }}
       - run: $HOME/.local/bin/boxing --version
       - run: $HOME/.local/bin/boxing --list
       - run: $HOME/.local/bin/setups --version
