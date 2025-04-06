@@ -25,5 +25,5 @@ setup_boxing(){
     "$HOME"/.local/bin/boxing --version && echo Boxing installed.
 }
 
-source <(curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/HEAD/setups/setups")
+curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/HEAD/setups/setups" | source /dev/stdin
 setups --force boxing
