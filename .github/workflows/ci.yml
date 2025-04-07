@@ -1,4 +1,4 @@
-name: CI
+name: boxing-curl-bash-installer
 on:
   push:
     branches:
