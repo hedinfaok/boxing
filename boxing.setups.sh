@@ -24,10 +24,8 @@ setup_boxing(){
     fi
     "$HOME"/.local/bin/boxing --version && echo Boxing installed.
 }
-set -x
+
+# Load setups remote library
 url="https://raw.githubusercontent.com/hedinfaok/boxing/${BRANCH_NAME:-HEAD}/setups/setups"
-
-# source <(curl -s "$url")
 source /dev/stdin <<< "$(curl -s "$url")"
-
 setups --force boxing
