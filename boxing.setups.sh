@@ -26,5 +26,8 @@ setup_boxing(){
 }
 set -x
 url="https://raw.githubusercontent.com/hedinfaok/boxing/${BRANCH_NAME:-HEAD}/setups/setups"
-source <(curl -s "$url")
+
+# source <(curl -s "$url")
+source /dev/stdin <<< "$(curl -s "$url")"
+
 setups --force boxing
