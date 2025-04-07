@@ -25,7 +25,7 @@ setup_boxing(){
     "$HOME"/.local/bin/boxing --version && echo Boxing installed.
 }
 set -x
-url="https://raw.githubusercontent.com/hedinfaok/boxing/github-action-test-curl-bash-install/setups/setups"
+url="https://raw.githubusercontent.com/hedinfaok/boxing/${BRANCH_NAME:-HEAD}/setups/setups"
 curl -so setups.tmp "$url" \
     && source ./setups.tmp
 setups --force boxing
