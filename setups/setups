@@ -2,7 +2,6 @@
 
 set -euo pipefail
 
-SETUPS_SOURCE="$(readlink -f "$0")"
 SETUPS_HOME=${SETUPS_HOME:-"$HOME/setups"}
 
 setups_prepare(){
@@ -251,4 +250,10 @@ setup_setups(){
   mv -f "$SETUPS_CTX_DOWNLOAD_PATH" "$SETUPS_HOME/bin/setups"
 }
 
-if [ "$0" == "${BASH_SOURCE[0]}" ]; then setups_prepare "$@"; fi
+if [ "$0" == "${BASH_SOURCE[0]}" ]; then
+  SETUPS_SOURCE="$(readlink -f "$0")"
+  setups_prepare "$@";
+else
+  # When sourced, don't load local setups
+  SETUPS_SOURCE="sourced from $0"
+fi

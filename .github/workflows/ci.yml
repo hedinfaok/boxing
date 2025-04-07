@@ -1,0 +1,43 @@
+name: boxing-curl-bash-installer
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        DOCKER_IMAGE: ["bash:3.2", "bash:4", "bash:5"]
+
+    container:
+      image: ${{ matrix.DOCKER_IMAGE }}
+      options: --cpus 1
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Get branch name
+        id: get-branch-name
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "BRANCH_NAME=${{ github.head_ref }}" >> $GITHUB_OUTPUT
+          else
+            echo "BRANCH_NAME=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
+          fi
+        shell: bash
+      - run: apk add --update-cache git curl
+      - run: echo curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/${{ steps.get-branch-name.outputs.BRANCH_NAME }}/boxing.setups.sh"
+      - run: curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/${{ steps.get-branch-name.outputs.BRANCH_NAME }}/boxing.setups.sh" | bash -x
+        env:
+          BRANCH_NAME: ${{ steps.get-branch-name.outputs.BRANCH_NAME }}
+      - run: $HOME/.local/bin/boxing --version
+      - run: $HOME/.local/bin/boxing --list
+
