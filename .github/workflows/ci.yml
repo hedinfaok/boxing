@@ -11,7 +11,7 @@ on:
       - synchronize
 
 jobs:
-  test:
+  installer:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -41,3 +41,25 @@ jobs:
       - run: $HOME/.local/bin/boxing --version
       - run: $HOME/.local/bin/boxing --list
 
+  macos-installer:
+    runs-on: macos-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Install dependencies
+        run: brew install git curl
+      - name: Get branch name
+        id: get-branch-name
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "BRANCH_NAME=${{ github.head_ref }}" >> $GITHUB_OUTPUT
+          else
+            echo "BRANCH_NAME=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
+          fi
+        shell: bash
+      - run: echo curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/${{ steps.get-branch-name.outputs.BRANCH_NAME }}/boxing.setups.sh"
+      - run: curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/${{ steps.get-branch-name.outputs.BRANCH_NAME }}/boxing.setups.sh" | bash -x
+        env:
+          BRANCH_NAME: ${{ steps.get-branch-name.outputs.BRANCH_NAME }}
+      - run: $HOME/.local/bin/boxing --version
+      - run: $HOME/.local/bin/boxing --list

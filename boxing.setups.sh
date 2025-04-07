@@ -20,7 +20,7 @@ setup_boxing(){
     fi
 
     if ! created -L "$HOME"/.local/bin/boxing; then
-        ln -sTf "$install_dir/boxing/boxing" "$HOME"/.local/bin/boxing
+        ln -sf "$install_dir/boxing/boxing" "$HOME"/.local/bin/boxing
     fi
     "$HOME"/.local/bin/boxing --version && echo Boxing installed.
 }
