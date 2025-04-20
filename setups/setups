@@ -7,6 +7,7 @@ SETUPS_HOME=${SETUPS_HOME:-"$HOME/setups"}
 setups_prepare(){
   SETUPS_BUILTINS=$(_setup_flags)
   [ -d "$SETUPS_HOME"/bin ] || mkdir -p "$SETUPS_HOME"/bin
+  [ -d "$SETUPS_HOME"/profile.d ] || mkdir -p "SETUPS_HOME"/profile.d
   source_dir "$SETUPS_HOME"/preload.d
   source_dir "$SETUPS_HOME"/plugins.d
   source_dir "$SETUPS_HOME"/setups.d
