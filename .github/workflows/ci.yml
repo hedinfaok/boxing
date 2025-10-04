@@ -33,13 +33,17 @@ jobs:
             echo "BRANCH_NAME=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
           fi
         shell: bash
-      - run: apk add --update-cache git curl
+      - run: apk add --update-cache git curl bats-core
       - run: echo curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/${{ steps.get-branch-name.outputs.BRANCH_NAME }}/boxing.setups.sh"
       - run: curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/${{ steps.get-branch-name.outputs.BRANCH_NAME }}/boxing.setups.sh" | bash -x
         env:
           BRANCH_NAME: ${{ steps.get-branch-name.outputs.BRANCH_NAME }}
       - run: $HOME/.local/bin/boxing --version
       - run: $HOME/.local/bin/boxing --list
+      - name: Run setups script tests
+        run: |
+          cd setups/tests
+          bats setups.bats
 
   macos-installer:
     runs-on: macos-latest
@@ -47,7 +51,7 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
       - name: Install dependencies
-        run: brew install git curl
+        run: brew install git curl bats-core
       - name: Get branch name
         id: get-branch-name
         run: |
@@ -63,3 +67,7 @@ jobs:
           BRANCH_NAME: ${{ steps.get-branch-name.outputs.BRANCH_NAME }}
       - run: $HOME/.local/bin/boxing --version
       - run: $HOME/.local/bin/boxing --list
+      - name: Run setups script tests
+        run: |
+          cd setups/tests
+          bats setups.bats

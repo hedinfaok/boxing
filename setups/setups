@@ -2,12 +2,26 @@
 
 set -euo pipefail
 
+# ==============================================================================
+# SETUPS - A bash utility for managing setup functions
+# ==============================================================================
+
 SETUPS_HOME=${SETUPS_HOME:-"$HOME/setups"}
 
+# ==============================================================================
+# MAIN ENTRY POINT
+# ==============================================================================
+
 setups_prepare(){
+  local dirs_to_create
   SETUPS_BUILTINS=$(_setup_flags)
-  [ -d "$SETUPS_HOME"/bin ] || mkdir -p "$SETUPS_HOME"/bin
-  [ -d "$SETUPS_HOME"/profile.d ] || mkdir -p "$SETUPS_HOME"/profile.d
+  
+  # Ensure required directories exist
+  dirs_to_create=("$SETUPS_HOME"/bin "$SETUPS_HOME"/profile.d)
+  for dir in "${dirs_to_create[@]}"; do
+    [ -d "$dir" ] || mkdir -p "$dir"
+  done
+  
   source_dir "$SETUPS_HOME"/preload.d
   source_dir "$SETUPS_HOME"/plugins.d
   source_dir "$SETUPS_HOME"/setups.d
@@ -28,11 +42,25 @@ setups(){
         skip_options="true"
         ;;
       --*)
-        [ -z "$skip_options" ] && "setup_$i" "$@"
+        if [ -z "$skip_options" ]; then
+          if declare -f "setup_$i" >/dev/null 2>&1; then
+            "setup_$i" "$@"
+          else
+            printf "Error: Unknown option '%s'\n" "$i" >&2
+            printf "Run 'setups --help' for available options.\n" >&2
+            return 1
+          fi
+        fi
         ;;
       *)
-        printf "Running setups for %s ...\n\n" "$i"
-        "setup_$i" "$@"
+        if declare -f "setup_$i" >/dev/null 2>&1; then
+          printf "Running setups for %s ...\n\n" "$i"
+          "setup_$i" "$@"
+        else
+          printf "Error: No setup function found for '%s'\n" "$i" >&2
+          printf "Run 'setups --list' to see available setups.\n" >&2
+          return 1
+        fi
         ;;
     esac
   done
@@ -40,30 +68,38 @@ setups(){
   if [ -n "${DEBUG:-}" ];then set +x; fi
 }
 
+# ==============================================================================
+# CORE FUNCTIONS
+# ==============================================================================
+
 source_dir(){
-  dir="${1:-"$SETUPS_HOME"/setups.d}"
-  fnmatch="${2:-*.sh}"
+  local dir="${1:-"$SETUPS_HOME"/setups.d}"
+  local fnmatch="${2:-*.sh}"
+  local file
 
   if [ -d "$dir" ]; then
-    for i in $dir/$fnmatch; do
-      if [ -r "$i" ]; then
+    # Use nullglob to handle no matches gracefully
+    shopt -s nullglob
+    for file in "$dir"/"$fnmatch"; do
+      if [ -r "$file" ]; then
         # shellcheck source=/dev/null
-        . "$i"
+        . "$file"
       fi
     done
-    unset i
+    shopt -u nullglob
   else
     mkdir -p "$dir" 2>/dev/null
   fi
-  unset dir fnmatch
 }
 
 # hedinfaok/chromeos-dotfiles/HEAD/setups/setups.d/base.sh
 source_github(){
   local GITHUB_TOKEN=${GITHUB_TOKEN:-$(gh auth token)}
-  local curl_opts
+  local curl_opts=()
+  local i url
+  
   for i in "$@"; do
-    local url=https://raw.githubusercontent.com/"$i"
+    url="https://raw.githubusercontent.com/$i"
     if [ -n "$GITHUB_TOKEN" ]; then
       curl_opts+=(
         -H
@@ -74,6 +110,10 @@ source_github(){
     source "$SETUPS_CTX_DOWNLOAD_PATH"
   done
 }
+
+# ==============================================================================
+# UTILITY FUNCTIONS
+# ==============================================================================
 
 # Wrap sudo to allow running setups as root user when sudo is in the script
 sudo(){
@@ -96,19 +136,34 @@ creates(){ created "$@"; }
 # Run setup_* if command not found
 needs(){
   for i in "$@"; do
-    command -v "$i" >/dev/null || setup_"$i"
+    if ! command -v "$i" >/dev/null; then
+      if declare -f "setup_$i" >/dev/null 2>&1; then
+        "setup_$i"
+      else
+        printf "Error: No setup function found for '%s'\n" "$i" >&2
+        return 1
+      fi
+    fi
   done
 }
 
 # url_path <url>, returns path part of URL
 url_path(){
   local url="$(printf "%s" "$1" | cut -d\? -f1)"
-  printf "\/%s" "$url" | cut -d/ -f4-
+  local path="$(printf "%s" "$url" | cut -d/ -f4-)"
+  printf "/%s" "$path"
 }
 
 # Usage: download <url> [curl_opt]...[curl_opt], SETUPS_CTX_DOWNLOAD_PATH stores download path
 download(){
-  local url="$1"; shift;
+  local url="$1"; shift
+  
+  # Basic URL validation
+  if [[ ! "$url" =~ ^https?:// ]]; then
+    printf "Error: URL must start with http:// or https://\n" >&2
+    return 1
+  fi
+  
   local tmp_path="$(mktemp -d -t setups-download-XXXXXXXXXXXX)"/"$(url_path "$url")"
   local curl_opts=(--fail --progress-bar --create-dir -o "$tmp_path" --location -X GET "$@")
 
@@ -120,8 +175,15 @@ download(){
 
 # Usage: prompt_for_command <command> [args]...[args]
 prompt_for_command(){
-  local message="Do you want to $@"
-  local command="$@"
+  local message="Do you want to $*"
+  local command="$*"
+  
+  # Basic validation to prevent command injection
+  if [[ "$command" =~ [';''&''|'] ]]; then
+    printf "Error: Command contains potentially unsafe characters\n" >&2
+    return 1
+  fi
+  
   while true; do
     read -p "$message [Y/n] " yn
     case $yn in
@@ -132,9 +194,11 @@ prompt_for_command(){
   done
 }
 
-#
-## Internal functions
-#
+
+# ==============================================================================
+# BUILTIN SETUP FUNCTIONS
+# ==============================================================================
+
 setup_--help(){
 cat <<HEREDOC
 Usage: setups [options] name [name ...]
@@ -152,10 +216,11 @@ HEREDOC
 
 # Print plugin options, one per line
 _setup_list_plugins(){
-  local grep_opts
+  local grep_opts=()
 
   for ignore in $SETUPS_BUILTINS; do
-    grep_opts+=(-e); grep_opts+=($ignore)
+    grep_opts+=(-e)
+    grep_opts+=("$ignore")
   done
   _setup_flags | grep -vF "${grep_opts[@]}"
 }
@@ -189,7 +254,8 @@ setup_--list(){
 # Print the source function that matches setup_$1
 setup_--print(){
   shift;
-  for s in ${@}; do
+  local s
+  for s in "$@"; do
     declare -f setup_"$s"
   done
   exit $?
