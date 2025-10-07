@@ -197,7 +197,7 @@ provides_brew_filepath() {
   provides_not_supported "filepath" "$1" "$PACKAGE_MANAGER"
 }
 provides_brew_bin() {
-  provides_not_supported "command" "$1" "$PACKAGE_MANAGER"
+  printf "[WARNING] Searching by command (%s) is not possible with brew.\n" "$1"
   printf "Using 'brew search %s'\n" "$1"
   brew search "$1"
 }
