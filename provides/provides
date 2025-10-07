@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
-set -eo pipefail
+#!/bin/sh
+set -e
 
 # ============================================================================
 # provides - Determine the package that provides a command or filepath
@@ -13,23 +13,23 @@ set -eo pipefail
 #   provides --apt nc
 # ============================================================================
 
-set -x
+
 # Entry point for provides script
 provides() {
-  if [[ -n "$DEBUG" ]]; then set -x; fi
+  if [ "${DEBUG:-}" ]; then set -x; fi
   for i in "$@"; do
     case "$i" in
       --help)
         provides_help
-        return 0
+        exit 0
         ;;
       --version)
         provides_version
-        return 0
+        exit 0
         ;;
       --checksum)
         provides_checksum
-        return 0
+        exit 0
         ;;
       --*)
         provides_option "$i"
@@ -42,13 +42,13 @@ provides() {
         ;;
     esac
   done
-  if [[ -n "$DEBUG" ]]; then set +x; fi
-  return 0
+  if [ "${DEBUG:-}" ]; then set +x; fi
+  exit 0
 }
 
 # Set package manager to --<PACKAGE_MANAGER>
 provides_option() {
-  local opt="$1"
+  opt="$1"
   case "$opt" in
     --apt) PACKAGE_MANAGER=apt ;;
     --setups) PACKAGE_MANAGER=setups ;;
@@ -66,14 +66,14 @@ provides_option() {
 
 # Print version information
 provides_version() {
-  printf "%s.%s.%s-%s\n" 1 0 0 redwing
+  printf "%s.%s.%s-%s\n" 1 1 0 redwing
   provides_checksum
 }
 
 
 # Print checksum of this script
 provides_checksum() {
-  printf "checksum (SHA256): %s\n" "$(sha256sum "$BASH_SOURCE" | cut -d' ' -f1)"
+  printf "checksum (SHA256): %s\n" "$(sha256sum "$0" | cut -d' ' -f1)"
 }
 
 
@@ -116,7 +116,7 @@ provides_apt_file() {
 
 # Search for filepath using apt
 provides_apt_filepath() {
-  local path="$1"
+  path="$1"
   provides_apt_file
   sudo apt-file search -x "^${path}$" | head -n1 | cut -d':' -f1
 }
@@ -124,20 +124,18 @@ provides_apt_filepath() {
 
 # Search for binary in apt
 provides_apt_bin() {
-  local bin
+  bin=$(provides_apt_alternatives_query "$1")
   provides_apt_file
-  bin="$(provides_apt_alternatives_query "$1")"
   sudo apt-file search -x "^/(usr/)?s?bin/${bin}(.default)?$" | cut -d':' -f1
 }
 
 
 # Query apt alternatives for binary
 provides_apt_alternatives_query() {
-  local bin="$1"
-  local alt
-  alt="$(update-alternatives --list "$bin" 2>/dev/null)"
-  if [[ -n "$alt" ]]; then
-    bin="$(basename "$alt")"
+  bin="$1"
+  alt=$(update-alternatives --list "$bin" 2>/dev/null)
+  if [ -n "$alt" ]; then
+    bin=$(basename "$alt")
   fi
   printf "%s" "$bin"
 }
@@ -165,7 +163,7 @@ provides_setups_filepath() {
   provides_not_supported "filepath" "$1" "$PACKAGE_MANAGER"
 }
 provides_setups_bin() {
-  local i="$1"
+  i="$1"
   boxing setups --print "$i"
 }
 
@@ -174,7 +172,6 @@ provides_setups_bin() {
 # see https://archlinux.org/pacman/pacman.8.html#FO
 ##
 
-# Pacman manager handlers
 provides_pacman_filepath() { provides_notyet; }
 provides_pacman_bin() { provides_notyet; }
 
@@ -182,7 +179,6 @@ provides_pacman_bin() { provides_notyet; }
 # yum
 ##
 
-# Yum manager handlers
 provides_yum_filepath() { provides_notyet; }
 provides_yum_bin() { provides_notyet; }
 
@@ -190,7 +186,6 @@ provides_yum_bin() { provides_notyet; }
 # dnf
 ##
 
-# Dnf manager handlers
 provides_dnf_filepath() { provides_notyet; }
 provides_dnf_bin() { provides_notyet; }
 
@@ -198,7 +193,6 @@ provides_dnf_bin() { provides_notyet; }
 # brew
 ##
 
-# Brew manager handlers
 provides_brew_filepath() {
   provides_not_supported "filepath" "$1" "$PACKAGE_MANAGER"
 }
@@ -212,7 +206,6 @@ provides_brew_bin() {
 # pkg (termux)
 ##
 
-# Pkg manager handlers
 provides_pkg_filepath() { provides_notyet; }
 provides_pkg_bin() { provides_notyet; }
 
@@ -220,7 +213,6 @@ provides_pkg_bin() { provides_notyet; }
 # apk
 ##
 
-# Apk manager handlers
 provides_apk_filepath() {
   command -v apk-file >/dev/null 2>&1 || apk add apk-file
   apk-file "$1"
@@ -234,7 +226,6 @@ provides_apk_bin() {
 # guix
 ##
 
-# Guix manager handlers
 provides_guix_filepath() {
   provides_not_supported "filepath" "$1" "$PACKAGE_MANAGER"
 }
@@ -248,7 +239,6 @@ provides_guix_bin() {
 # nix
 ##
 
-# Nix manager handlers
 provides_nix_filepath() { provides_notyet; }
 provides_nix_bin() { provides_notyet; }
 
@@ -290,7 +280,7 @@ provides_bin() {
 }
 
 # Wrap sudo to allow running as root user when sudo is in the script
-sudo(){
+sudo() {
   if [ "$(id -u)" -ne 0 ]; then
     /usr/bin/sudo "$@"
   else
@@ -298,8 +288,7 @@ sudo(){
   fi
 }
 
-
 # Main execution pattern
-if [[ "$0" == "${BASH_SOURCE[0]}" ]]; then
-  provides "$@"
-fi
+case "$0" in
+  */provides) provides "$@" ;;
+esac
