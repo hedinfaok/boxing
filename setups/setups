@@ -165,11 +165,11 @@ download(){
   fi
   
   local tmp_path="$(mktemp -d -t setups-download-XXXXXXXXXXXX)"/"$(url_path "$url")"
-  local curl_opts=(--fail --progress-bar --create-dir -o "$tmp_path" --location -X GET "$@")
+  local curl_opts=(--fail --progress-bar -o "$tmp_path" --location -X GET "$@")
 
   printf "Download source: %s\nDownload destination: %s\n" "$url" "$tmp_path"
   SETUPS_CTX_DOWNLOAD_PATH=""
-  curl "${curl_opts[@]}" "$url"
+  mkdir -p "$(dirname "$tmp_path")" && curl "${curl_opts[@]}" "$url"
   export SETUPS_CTX_DOWNLOAD_PATH="$tmp_path"
 }
 
@@ -226,7 +226,7 @@ _setup_list_plugins(){
 }
 
 setup_--version(){
-  printf "%s.%s.%s-%s\n" 1 1 0 dumbledore
+  printf "%s.%s.%s-%s\n" 1 1 1 dumbledore
   setup_--checksum
 }
 
