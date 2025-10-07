@@ -1,67 +1,48 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-setup_distro(){
-  needs python3 pip3
-  pip3 install --user distro
-}
+set -eu
 
-setup_virt-what(){
-  sudo apt-get install virt-what
-}
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-os_facts_virt_facts(){
+os_facts_virt_facts() {
   # See /usr/bin/systemd-detect-virt --list
   # See https://github.com/systemd/systemd/blob/dd003f1621967f114a6a808bb1f729386dc3a154/src/basic/virt.c#L647
-  sudo /usr/sbin/virt-what
+  "$SCRIPT_DIR"/virt.sh detect
 }
 
-os_facts_release(){
-    local id
-    cat /etc/*release
+os_facts_distro_facts() {
+  "$SCRIPT_DIR"/distro.sh info
 }
 
-os_facts_release_id(){
-    local id
-
-    id="$(grep -i -e '^ID=' /etc/*release 2>/dev/null | cut -d= -f2)"
-    printf "%s" "$id"
+os_facts_proc_version() {
+  id=""
+  proc_version=""
+  if [ -f /proc/version ]; then
+    proc_version="$(cat /proc/version)"
+    printf "Contents of /proc/version: %s\n\n" "$proc_version"
+    case "$proc_version" in
+      *chromeos*) id=chromeos ;;
+      *ubuntu*) id=ubuntu ;;
+      *debian*) id=debian ;;
+      *redhat*) id=redhat ;;
+      *microsoft*) id=microsoft ;;
+      *) id=unknown ;;
+    esac
+    printf "ID: %s\n" "$id"
+  else
+    printf "The current system does not have /proc/version\n"
+  fi
 }
 
-os_facts_kernel_id(){
-  local id
-  case "$(cat /proc/version)" in
-    *chromeos*) id=chromeos ;;
-    *ubuntu*) id=ubuntu ;;
-    *debian*) id=debian ;;
-    *redhat*) id=redhat ;;
-    *microsoft*) id=microsoft ;;
-    *) id=unknown ;;
-  esac
-  printf "%s" "$id"
+os_facts() {
+  printf "== Virtualization facts ==\n"
+  os_facts_virt_facts
+  printf "\n== Linux /proc/version contents ==\n"
+  os_facts_proc_version
+  printf "\n== System Information (uname -a) ==\n"
+  uname -a
+  printf "\n== Distro (distro.sh info) facts ==\n"
+  os_facts_distro_facts
 }
 
-os_facts(){
-  needs distro virt-what >/dev/null 2>&1
-  cat <<HEREDOC
-== Virtualization facts ==
-$(os_facts_virt_facts)
-
-== Kerknel ID fact ==
-$(os_facts_kernel_id)
-
-== System Information (uname) ==
-$(uname -a)
-
-== OS Release facts ==
-$(os_facts_release)
-
-== Distro (distro.py) facts
-$(distro)
-HEREDOC
-}
-
-setup_--os-facts(){
-    os_facts
-}
-
-if [ "$0" == "${BASH_SOURCE[0]}" ]; then os_facts "$@"; fi
+if [ "${0##*/}" = "os-facts" ]; then os_facts "$@"; fi
