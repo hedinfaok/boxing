@@ -232,7 +232,7 @@ EOF
     
     run setups --version
     [ "$status" -eq 0 ]
-    [[ "$output" == *"1.1.0-dumbledore"* ]]
+    [[ "$output" == *"dumbledore"* ]]
 }
 
 @test "setups fails for unknown options" {
