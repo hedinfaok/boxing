@@ -16,6 +16,7 @@ jobs:
     strategy:
       matrix:
         DOCKER_IMAGE: ["bash:3.2", "bash:4", "bash:5"]
+        SETUPS_REPOS: ["", "use-default-setups-repo-directory"]
 
     container:
       image: ${{ matrix.DOCKER_IMAGE }}
@@ -38,6 +39,7 @@ jobs:
       - run: curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/${{ steps.get-branch-name.outputs.BRANCH_NAME }}/boxing.setups.sh" | bash -x
         env:
           BRANCH_NAME: ${{ steps.get-branch-name.outputs.BRANCH_NAME }}
+          SETUPS_REPOS: ${{ matrix.SETUPS_REPOS }}
       - run: $HOME/.local/bin/boxing --version
       - run: $HOME/.local/bin/boxing --list
       - name: Run setups script tests
