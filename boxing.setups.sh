@@ -8,8 +8,6 @@ boxing_setup_tar() {
         curl -L https://github.com/hedinfaok/boxing/archive/refs/heads/main.tar.gz | tar -xz --strip-components=1 -C "$install_dir" || {
             echo "Error: Failed to download and extract."
             exit 1
-        } && {
-            echo "Boxing code downloaded successfully to $install_dir"
         }
     fi
 }
@@ -24,36 +22,51 @@ boxing_setup_repo() {
     fi
 }
 
+boxing_setup_install_dir() {
+    local use_git="${USE_GIT:-}"
+    local boxing_dir="${BOXING_DIR:-}"
+    local setups_repos="${SETUPS_REPOS:-"$HOME/.local/share/setups/repos"}"
+
+    if [ -n "$boxing_dir" ];then
+        if [ -d "$boxing_dir" ]; then
+            install_dir="$boxing_dir"
+        else
+            echo "Error: BOXING_DIR=${boxing_dir} is not a valid directory. You may need to create it." 1>&2
+            return 127
+        fi
+    elif [ -n "$use_git" ]; then
+        if [ -d "$setups_repos" ]; then
+            install_dir="$setups_repos/boxing"
+        else
+            echo "Error: SETUPS_REPOS=${setups_repos} is not a valid directory. You may need to create it." 1>&2
+            return 127
+        fi
+    else
+        install_dir="$HOME/.local/share/boxing"
+    fi
+    echo "$install_dir"
+}
+
 setup_boxing(){
+    local use_git="${USE_GIT:-}"
     local install_dir
+
+    local bin_dir="$HOME/.local/bin"
     local source_file
     local target_file
-    local bin_dir="$HOME"/.local/bin
 
-    # Set SETUPS_REPOS to use git to install, else use curl+tar
-    if [ -z "$SETUPS_REPOS" ]; then
-        if [ -n "${BOXING_DIR:-}" ] && [ -d "${BOXING_DIR:-/dev/null}" ]; then
-            install_dir="$BOXING_DIR"
-        else
-            install_dir="$HOME/.local/share/boxing"
-        fi
-        boxing_setup_tar "$install_dir"
+    install_dir="$(boxing_setup_install_dir)"
+    if [ -n "$use_git" ]; then
+        boxing_setup_repo "$install_dir"
     else
-        if [ -d "$SETUPS_REPOS" ]; then
-            install_dir="$SETUPS_REPOS/boxing"
-            boxing_setup_repo "$install_dir"
-        else
-            install_dir="$HOME/.local/share/setups/repos/boxing"
-            echo "Warning: SETUPS_REPOS is not a valid directory. Using $install_dir" 1>&2
-            boxing_setup_repo "$install_dir"
-        fi
+        boxing_setup_tar "$install_dir"
     fi
 
-    if $install_dir/boxing --version; then
-        echo "Boxing downloaded successfully to $install_dir"
+    if "$install_dir/boxing" --version >/dev/null; then
+        echo -e "Boxing downloaded successfully to $install_dir.\nRun $install_dir/boxing --help for a list of commands."
     else
         echo "Error: Boxing installation failed." 1>&2
-        exit 1
+        return 1
     fi
 
     if ! created -d "$bin_dir"; then
@@ -64,10 +77,14 @@ setup_boxing(){
     if ! created -L $bin_dir/boxing; then
         ln -sf "$install_dir/boxing" "$bin_dir/boxing"
     fi
-    "$HOME"/.local/bin/boxing --version && echo Boxing installed.
+    # "$HOME"/.local/bin/boxing --version && echo Boxing installed.
 }
 
 # Load setups remote library
 url="https://raw.githubusercontent.com/hedinfaok/boxing/${BRANCH_NAME:-HEAD}/setups/setups"
 source /dev/stdin <<< "$(curl -s "$url")"
-setups --force boxing
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    # setups --force boxing
+    setups --force boxing
+fi
