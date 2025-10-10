@@ -32,7 +32,7 @@ setup_boxing(){
 
     # Set SETUPS_REPOS to use git to install, else use curl+tar
     if [ -z "$SETUPS_REPOS" ]; then
-        if [ -n "${BOXING_DIR:-}" ] && [ -d "$BOXING_DIR" ]; then
+        if [ -n "${BOXING_DIR:-}" ] && [ -d "${BOXING_DIR:-/dev/null}" ]; then
             install_dir="$BOXING_DIR"
         else
             install_dir="$HOME/.local/share/boxing"
