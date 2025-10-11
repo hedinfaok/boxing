@@ -86,5 +86,5 @@ source /dev/stdin <<< "$(curl -s "$url")"
 
 if [[ "${BASH_SOURCE[0]:-bash}" == "${0}" ]]; then
     # setups --force boxing
-    echo setups --force boxing
+    setups --force boxing
 fi
