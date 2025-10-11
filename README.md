@@ -19,14 +19,39 @@ For Termux or my personal computer, I use Boxing in my dotfiles.
 
 ## Installation
 
+By default, the installer script uses the Freedesktop.org convention. It installs Boxing into `~/.local/share/boxing` and creates a symlink in `~/.local/bin`.
+
 ```
+# Install defaults
 bash <(curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/HEAD/boxing.setups.sh")
+
+# With `~/.local/bin` in your PATH:
+boxing --version
+
+# With `~/.local/bin` not in your PATH:
+~/.local/bin/boxing --version
+
+# Directly from default install directory:
+~/.local/share/boxing/boxing --version
 ```
-Make sure `~/.local/bin` is in your PATH.
+
+You can customize the installer with the `BOXING_DIR` and `BIN_DIR` environment variables:
+
+```
+BOXING_DIR=./boxing \
+BIN_DIR=./bin \
+    bash <(curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/HEAD/boxing.setups.sh")
+
+# Run from BIN_DIR:
+./bin/boxing --version
+
+# Run from BOXING_DIR:
+./boxing/boxing --version
+```
 
 ### Alternative Installtion
 
-Alternatively, just clone the directory and add the directory to your PATH.
+Alternatively, just clone this repo and add the directory to your PATH.
 
 ## Using as a provisioner
 

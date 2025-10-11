@@ -5,9 +5,9 @@ boxing_setup_tar() {
     local install_dir="$1"
     if ! created -x "$install_dir/boxing"; then
         mkdir -p "$install_dir"
-        curl -L https://github.com/hedinfaok/boxing/archive/refs/heads/main.tar.gz | tar -xz --strip-components=1 -C "$install_dir" || {
+        curl -sL https://github.com/hedinfaok/boxing/archive/refs/heads/main.tar.gz | tar -xz --strip-components=1 -C "$install_dir" || {
             echo "Error: Failed to download and extract."
-            exit 1
+            return 1
         }
     fi
 }
@@ -23,9 +23,9 @@ boxing_setup_repo() {
 }
 
 boxing_setup_install_dir() {
-    local use_git="${USE_GIT:-}"
     local boxing_dir="${BOXING_DIR:-}"
     local setups_repos="${SETUPS_REPOS:-"$HOME/.local/share/setups/repos"}"
+    local use_git="${USE_GIT:-}"
 
     if [ -n "$boxing_dir" ];then
         if mkdir -p "$boxing_dir"; then
@@ -48,36 +48,51 @@ boxing_setup_install_dir() {
 }
 
 setup_boxing(){
-    local use_git="${USE_GIT:-}"
+    local bin_dir="${BIN_DIR:-$HOME/.local/bin}"
     local install_dir
+    local use_git="${USE_GIT:-}"
 
-    local bin_dir="$HOME/.local/bin"
-    local source_file
-    local target_file
-
+    # Get install directory
     install_dir="$(boxing_setup_install_dir)"
+
+    # Use git or curl+tar for installation
     if [ -n "$use_git" ]; then
         boxing_setup_repo "$install_dir"
     else
         boxing_setup_tar "$install_dir"
     fi
 
+    # Verify download
     if "$install_dir/boxing" --version >/dev/null; then
-        echo -e "Boxing downloaded successfully to $install_dir.\nRun $install_dir/boxing --help for a list of commands."
+        echo "Boxing downloaded successfully to $install_dir"
     else
         echo "Error: Boxing installation failed." 1>&2
         return 1
     fi
 
+    # Verify bin_dir in PATH (bash v3 compatible)
+    case ":$PATH:" in
+        *":$bin_dir:"*)
+            ;;
+        *)
+            echo "Warning: BIN_DIR=$bin_dir is not in your PATH."
+            ;;
+    esac
+
+    # Create bin directory if it doesn't exist
     if ! created -d "$bin_dir"; then
         mkdir -p "$bin_dir"
     fi
 
     # Create symlink in bin directory
     if ! created -L $bin_dir/boxing; then
-        ln -sf "$install_dir/boxing" "$bin_dir/boxing"
+        if ln -sf "$install_dir/boxing" "$bin_dir/boxing"; then
+            echo "Boxing link created successfully at $bin_dir/boxing"
+        else
+            echo "Error: Failed to create symlink in $bin_dir." 1>&2
+            echo "You can still run Boxing from $install_dir/boxing" 1>&2
+        fi
     fi
-    # "$HOME"/.local/bin/boxing --version && echo Boxing installed.
 }
 
 # Load setups remote library
@@ -85,6 +100,5 @@ url="https://raw.githubusercontent.com/hedinfaok/boxing/${BRANCH_NAME:-HEAD}/set
 source /dev/stdin <<< "$(curl -s "$url")"
 
 if [[ "${BASH_SOURCE[0]:-bash}" == "${0}" ]]; then
-    # setups --force boxing
     setups --force boxing
 fi
