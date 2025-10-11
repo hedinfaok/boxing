@@ -37,7 +37,9 @@ jobs:
         shell: bash
       - run: apk add --update-cache git curl bats-core
       - run: |
-          mkdir -p ${{ matrix.BOXING_DIR }}
+          if [ -n "${{ matrix.BOXING_DIR }}" ]; then
+            mkdir -p ${{ matrix.BOXING_DIR }}
+          fi
           curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/${{ steps.get-branch-name.outputs.BRANCH_NAME }}/boxing.setups.sh" | bash -x
         env:
           BRANCH_NAME: ${{ steps.get-branch-name.outputs.BRANCH_NAME }}
@@ -72,7 +74,9 @@ jobs:
           fi
         shell: bash
       - run: |
-          mkdir -p ${{ matrix.BOXING_DIR }}
+          if [ -n "${{ matrix.BOXING_DIR }}" ]; then
+            mkdir -p ${{ matrix.BOXING_DIR }}
+          fi
           curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/${{ steps.get-branch-name.outputs.BRANCH_NAME }}/boxing.setups.sh" | bash -x
         env:
           BRANCH_NAME: ${{ steps.get-branch-name.outputs.BRANCH_NAME }}
