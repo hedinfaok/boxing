@@ -28,17 +28,17 @@ boxing_setup_install_dir() {
     local setups_repos="${SETUPS_REPOS:-"$HOME/.local/share/setups/repos"}"
 
     if [ -n "$boxing_dir" ];then
-        if [ -d "$boxing_dir" ]; then
+        if mkdir -p "$boxing_dir"; then
             install_dir="$boxing_dir"
         else
-            echo "Error: BOXING_DIR=${boxing_dir} is not a valid directory. You may need to create it." 1>&2
+            echo "Error: BOXING_DIR=${boxing_dir} failed." 1>&2
             return 127
         fi
     elif [ -n "$use_git" ]; then
-        if [ -d "$setups_repos" ]; then
+        if mkdir -p "$setups_repos"; then
             install_dir="$setups_repos/boxing"
         else
-            echo "Error: SETUPS_REPOS=${setups_repos} is not a valid directory. You may need to create it." 1>&2
+            echo "Error: SETUPS_REPOS=${setups_repos} failed." 1>&2
             return 127
         fi
     else
