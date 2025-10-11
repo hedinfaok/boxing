@@ -16,7 +16,8 @@ jobs:
     strategy:
       matrix:
         DOCKER_IMAGE: ["bash:3.2", "bash:4", "bash:5"]
-        SETUPS_REPOS: ["", "use-default-setups-repo-directory"]
+        BOXING_DIR: ["", "./vendor/boxing"]
+        USE_GIT: ["", "true"]
 
     container:
       image: ${{ matrix.DOCKER_IMAGE }}
@@ -35,11 +36,12 @@ jobs:
           fi
         shell: bash
       - run: apk add --update-cache git curl bats-core
-      - run: echo curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/${{ steps.get-branch-name.outputs.BRANCH_NAME }}/boxing.setups.sh"
-      - run: curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/${{ steps.get-branch-name.outputs.BRANCH_NAME }}/boxing.setups.sh" | bash -x
+      - run: |
+          mkdir -p ${{ matrix.BOXING_DIR }}
+          curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/${{ steps.get-branch-name.outputs.BRANCH_NAME }}/boxing.setups.sh" | bash -x
         env:
           BRANCH_NAME: ${{ steps.get-branch-name.outputs.BRANCH_NAME }}
-          SETUPS_REPOS: ${{ matrix.SETUPS_REPOS }}
+          USE_GIT: ${{ matrix.USE_GIT }}
       - run: $HOME/.local/bin/boxing --version
       - run: $HOME/.local/bin/boxing --list
       - name: Run setups script tests
@@ -49,6 +51,12 @@ jobs:
 
   macos-installer:
     runs-on: macos-latest
+    strategy:
+      matrix:
+        DOCKER_IMAGE: ["bash:3.2", "bash:4", "bash:5"]
+        BOXING_DIR: ["", "./vendor/boxing"]
+        USE_GIT: ["", "true"]
+
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
@@ -63,10 +71,12 @@ jobs:
             echo "BRANCH_NAME=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
           fi
         shell: bash
-      - run: echo curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/${{ steps.get-branch-name.outputs.BRANCH_NAME }}/boxing.setups.sh"
-      - run: curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/${{ steps.get-branch-name.outputs.BRANCH_NAME }}/boxing.setups.sh" | bash -x
+      - run: |
+          mkdir -p ${{ matrix.BOXING_DIR }}
+          curl -s "https://raw.githubusercontent.com/hedinfaok/boxing/${{ steps.get-branch-name.outputs.BRANCH_NAME }}/boxing.setups.sh" | bash -x
         env:
           BRANCH_NAME: ${{ steps.get-branch-name.outputs.BRANCH_NAME }}
+          USE_GIT: ${{ matrix.USE_GIT }}
       - run: $HOME/.local/bin/boxing --version
       - run: $HOME/.local/bin/boxing --list
       - name: Run setups script tests
