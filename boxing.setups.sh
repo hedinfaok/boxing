@@ -16,7 +16,7 @@ boxing_setup_repo() {
     local install_dir="$1"
     if ! created -d "$install_dir/.git"; then
         rm -rf "$install_dir"
-        git -C "$install_dir" clone https://github.com/hedinfaok/boxing.git
+        git -C "$(dirname "$install_dir")" clone https://github.com/hedinfaok/boxing.git
     else
         git -C "$install_dir" pull
     fi
