@@ -51,7 +51,6 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        DOCKER_IMAGE: ["bash:3.2", "bash:4", "bash:5"]
         BOXING_DIR: ["", "./vendor/boxing"]
         USE_GIT: ["", "true"]
 
