@@ -84,7 +84,7 @@ setup_boxing(){
 url="https://raw.githubusercontent.com/hedinfaok/boxing/${BRANCH_NAME:-HEAD}/setups/setups"
 source /dev/stdin <<< "$(curl -s "$url")"
 
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+if [[ "${BASH_SOURCE[0]:-bash}" == "${0}" ]]; then
     # setups --force boxing
-    setups --force boxing
+    echo setups --force boxing
 fi
