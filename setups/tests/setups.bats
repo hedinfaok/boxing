@@ -107,13 +107,13 @@ teardown() {
 
 @test "source_dir sources files from directory" {
     # Create a test setup file
-    cat > "$SETUPS_HOME/setups.d/test.sh" << 'EOF'
-# This is a test file
-EOF
-    
+    echo 'echo "test setup sourced"' > "$SETUPS_HOME/setups.d/test.sh"
+
     # Source the directory should not fail
     run source_dir "$SETUPS_HOME/setups.d"
+    # env|sort
     [ "$status" -eq 0 ]
+    [[ "$output" == *"test setup sourced"* ]]
 }
 
 @test "source_dir creates directory if it doesn't exist" {

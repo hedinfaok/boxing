@@ -80,7 +80,7 @@ source_dir(){
   if [ -d "$dir" ]; then
     # Use nullglob to handle no matches gracefully
     shopt -s nullglob
-    for file in "$dir"/"$fnmatch"; do
+    for file in "$dir"/$fnmatch; do
       if [ -r "$file" ]; then
         # shellcheck source=/dev/null
         . "$file"
